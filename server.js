@@ -5,7 +5,7 @@ const cors = require('cors');
 //const routes = require('./routes/tickets');
 //rest obj
 const app = express();
-const port = 8000;
+const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -15,9 +15,10 @@ const db = require('./config/db');
 
 // Create a new ticket
 app.post('/tickets', (req, res) => {
-    const { title, description } = req.body;    
-    const query = 'INSERT INTO tickets (title, description) VALUES (?, ?)';
-    db.query(query, [title, description], (err, result) => {        
+    const { title, description, assign_to } = req.body; 
+      
+    const query = 'INSERT INTO tickets (title, description, assign_to) VALUES (?, ?, ?)';
+    db.query(query, [title, description, assign_to], (err, result) => {        
         if (err) return res.status(500).send(err);
         res.status(201).json({ id: result.insertId, title, description });
     });
