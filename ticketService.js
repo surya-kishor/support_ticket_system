@@ -41,13 +41,15 @@ const updateTicket = async (req) => {
         const { title, description, status} = req.body;
 
         //const validStatus = ['open', 'in_progress', 'closed'];
-
-        if (!validStatus.includes(status)) {
-            return({ error: "Invalid status provided" });
+        let newStatus = status;
+        if (!newStatus) {
+            newStatus = 'open'; 
+        } else if (!validStatus.includes(newStatus)) {
+            return res.status(400).send('Invalid status provided');
         }
         
         const {id} = req.params;
-        const results = await db.execute('UPDATE tickets SET title = ?, description = ?, status = ? WHERE id = ?', [title, description, status, id]);
+        const results = await db.execute('UPDATE tickets SET title = ?, description = ?, status = ? WHERE id = ?', [title, description, newStatus, id]);
         
         return (results[0]);
 
@@ -70,13 +72,22 @@ const deleteTicket = async (id, res) => {
     }
 
 };
-const assignToTicket = async (req) => {
+const assignToTicket = async (req, res) => {
     try {
         
         const ticketId = req.params.id;
         const { userId } = req.body;
-        console.log(userId, ticketId);
-        
+        // Check if the user is valid
+        if (!userId) {
+            return ({error:'UserId is required'});
+        }
+
+        // Check if the user exists
+        const user = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+            
+            if (user[0].length === 0) {
+                return ({error:'User not found'});
+            }
         const query = 'UPDATE tickets SET assign_to = ? WHERE id = ?';
         const results = await db.execute(query, [userId, ticketId] );
 
@@ -94,11 +105,14 @@ const moveTicketStatus = async (req) => {
         
         const ticketId = req.params.id;
         const { status } = req.body;
-        if (!validStatus.includes(status)) {
-            return({ error: "Invalid status provided" });
+        let newStatus = status;
+        if (!newStatus) {
+            newStatus = 'open'; 
+        } else if (!validStatus.includes(newStatus)) {
+            return res.status(400).send('Invalid status provided');
         }
         const query = 'UPDATE tickets SET status = ? WHERE id = ?';
-        const results = await db.execute(query, [status, ticketId]);
+        const results = await db.execute(query, [newStatus, ticketId]);
 
         return(results[0]);
 
